@@ -1,0 +1,11 @@
+import Body from './components/Body';
+import appStore from './utils/AppStore';
+
+function App() {
+  return (
+    <Provider store = {appStore}>
+    <Body />
+  );
+}
+
+export default App;
