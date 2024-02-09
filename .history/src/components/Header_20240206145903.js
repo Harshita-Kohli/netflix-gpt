@@ -1,0 +1,53 @@
+import React ,{ useEffect }from 'react'
+import { signOut } from "firebase/auth";
+import { auth } from "../utils/firebase";
+import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { onAuthStateChanged } from "firebase/auth";
+import { addUser, removeUser } from '../utils/userSlice';
+import { LOGO } from '../utils/constants';
+const Header = () => {
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const user = useSelector((store) => store.user);
+    const handleSignOut = () => {
+        signOut(auth).then(() => {
+            // Sign-out successful.
+        }).catch((error) => {
+            // An error happened.
+            navigate("/error");
+        });
+    }
+
+    //onAuthStateChange is a kind of an event listener, which we want to setup this only once 
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // as the User signs in, dispatch addUser action
+                const { uid, email, displayName,photoURL } = user;
+                //dispatching the adduser action to the store with this payload object
+                dispatch(addUser({ uid: uid, email: email, displayName: displayName, photoURL:photoURL }));
+               // redirect user to browse page
+                navigate("/browse");
+            } else {
+                // User is signed out, so dispatching removeUser() action to store upon signing out of the user
+                dispatch(removeUser());
+                //if sign out, redirect to home page
+                navigate("/");
+            }
+        });
+        //unsubscribe when component unmounts
+        return ()=>unsubscribe();
+    }, []);
+
+    return (
+        <div className='absolute px-8 py-2 bg-gradient-to-b from-black z-50 w-screen flex justify-between'>
+            <img src={logo} alt="logo" className='w-36 h-50' ></img >
+            {user && <div className='flex p-2'><img src={user.photoURL} alt="userIcon" className='flex p-2 w-12 h-12' />
+                <button className='font-bold text-white' onClick={handleSignOut}>(Sign Out)</button></div>}
+        </div>
+
+    )
+}
+
+export default Header;
